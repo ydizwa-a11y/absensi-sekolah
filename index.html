@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الحضور والانصراف - معهد دار العز والدعوة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container">
+        <header class="premium-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-mosque"></i>
+                    <h1>معهد دار العز والدعوة</h1>
+                </div>
+                <div class="header-text">
+                    <p>نظام الحضور والانصراف الذكي</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Login Section -->
+        <section id="loginSection" class="login-section premium-card">
+            <div class="login-header">
+                <h2><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</h2>
+                <p>اختر نوع المستخدم وأدخل الرقم السري</p>
+            </div>
+            
+            <div class="login-form">
+                <div class="input-group">
+                    <label><i class="fas fa-user-tag"></i> نوع المستخدم</label>
+                    <select id="userType" class="premium-input">
+                        <option value="owner">👑 المالك</option>
+                        <option value="teacher">👨‍🏫 المعلم</option>
+                        <option value="student">🎓 الطالب</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-lock"></i> الرقم السري</label>
+                    <input type="password" id="pinInput" class="premium-input" placeholder="أدخل الرقم السري" maxlength="6">
+                </div>
+
+                <button class="premium-btn login-btn" onclick="login()">
+                    <i class="fas fa-door-open"></i> دخول إلى النظام
+                </button>
+            </div>
+
+            <div class="login-footer">
+                <div class="pin-info">
+                    <h4>ملاحظة:</h4>
+                    <p>يجب أن يقوم المالك بتسجيل المستخدمين وتعيين الأرقام السرية أولاً</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Owner Dashboard -->
+        <section id="ownerDashboard" class="dashboard premium-card" style="display: none;">
+            <div class="dashboard-header">
+                <h2><i class="fas fa-crown"></i> لوحة تحكم المالك</h2>
+                <div class="user-info">
+                    <span id="ownerName">المالك</span>
+                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab('registerTab')">
+                    <i class="fas fa-user-plus"></i> تسجيل مستخدمين
+                </button>
+                <button class="tab-btn" onclick="openTab('viewDataTab')">
+                    <i class="fas fa-database"></i> عرض البيانات
+                </button>
+                <button class="tab-btn" onclick="openTab('managePinsTab')">
+                    <i class="fas fa-key"></i> إدارة الأرقام السرية
+                </button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Register Tab -->
+                <div id="registerTab" class="tab-pane active">
+                    <h3><i class="fas fa-user-plus"></i> تسجيل مستخدم جديد</h3>
+                    <div class="register-form">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>نوع المستخدم</label>
+                                <select id="registerType" class="premium-input" onchange="toggleRegisterFields()">
+                                    <option value="teacher">👨‍🏫 معلم</option>
+                                    <option value="student">🎓 طالب</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>الاسم الكامل</label>
+                                <input type="text" id="registerName" class="premium-input" placeholder="أدخل الاسم الكامل">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="input-group" id="classField">
+                                <label>الصف الدراسي</label>
+                                <input type="text" id="registerClass" class="premium-input" placeholder="أدخل الصف">
+                            </div>
+                            <div class="input-group" id="subjectField" style="display: none;">
+                                <label>المادة الدراسية</label>
+                                <input type="text" id="registerSubject" class="premium-input" placeholder="أدخل المادة">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label>الرقم السري</label>
+                                <input type="text" id="registerPin" class="premium-input" placeholder="أدخل الرقم السري (6 أرقام)" maxlength="6">
+                            </div>
+                        </div>
+
+                        <button class="premium-btn" onclick="registerUser()">
+                            <i class="fas fa-save"></i> تسجيل المستخدم
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View Data Tab -->
+                <div id="viewDataTab" class="tab-pane">
+                    <h3><i class="fas fa-database"></i> قاعدة البيانات</h3>
+                    <div class="data-sections">
+                        <div class="data-section">
+                            <h4><i class="fas fa-chalkboard-teacher"></i> قائمة المعلمين</h4>
+                            <div id="teachersList" class="data-list">
+                                <div class="no-data">لا يوجد معلمون مسجلون بعد</div>
+                            </div>
+                        </div>
+                        <div class="data-section">
+                            <h4><i class="fas fa-user-graduate"></i> قائمة الطلاب</h4>
+                            <div id="studentsList" class="data-list">
+                                <div class="no-data">لا يوجد طلاب مسجلون بعد</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Pins Tab -->
+                <div id="managePinsTab" class="tab-pane">
+                    <h3><i class="fas fa-key"></i> إدارة الأرقام السرية</h3>
+                    <div class="pins-management">
+                        <div class="input-group">
+                            <label>رقم سري المالك</label>
+                            <input type="text" id="ownerPin" class="premium-input" placeholder="أدخل الرقم السري للمالك" maxlength="6">
+                        </div>
+                        <div class="input-group">
+                            <label>رقم سري افتراضي للمعلمين الجدد</label>
+                            <input type="text" id="defaultTeacherPin" class="premium-input" placeholder="أدخل الرقم الافتراضي" maxlength="6">
+                        </div>
+                        <div class="input-group">
+                            <label>رقم سري افتراضي للطلاب الجدد</label>
+                            <input type="text" id="defaultStudentPin" class="premium-input" placeholder="أدخل الرقم الافتراضي" maxlength="6">
+                        </div>
+                        <button class="premium-btn" onclick="savePinsConfig()">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Teacher Dashboard -->
+        <section id="teacherDashboard" class="dashboard premium-card" style="display: none;">
+            <div class="dashboard-header">
+                <h2><i class="fas fa-chalkboard-teacher"></i> لوحة المعلم</h2>
+                <div class="user-info">
+                    <span id="teacherName">المعلم</span>
+                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTeacherTab('teacherAttendanceTab')">
+                    <i class="fas fa-fingerprint"></i> تسجيل حضوري
+                </button>
+                <button class="tab-btn" onclick="openTeacherTab('viewStudentsTab')">
+                    <i class="fas fa-users"></i> حضور الطلاب
+                </button>
+            </div>
+
+            <div class="tab-content">
+                <div id="teacherAttendanceTab" class="tab-pane active">
+                    <h3><i class="fas fa-fingerprint"></i> تسجيل الحضور</h3>
+                    <div class="attendance-buttons">
+                        <button class="attendance-btn present" onclick="startAttendanceProcess('teacher', 'hadir')">
+                            <i class="fas fa-check-circle"></i>
+                            <span>حضور</span>
+                        </button>
+                        <button class="attendance-btn permission" onclick="showReasonForm('teacher', 'izin')">
+                            <i class="fas fa-clock"></i>
+                            <span>إذن</span>
+                        </button>
+                        <button class="attendance-btn sick" onclick="showReasonForm('teacher', 'sakit')">
+                            <i class="fas fa-procedures"></i>
+                            <span>مرض</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="viewStudentsTab" class="tab-pane">
+                    <h3><i class="fas fa-users"></i> حضور الطلاب</h3>
+                    <div class="filter-section">
+                        <input type="date" id="attendanceDate" class="premium-input">
+                        <button class="premium-btn small" onclick="loadStudentsAttendance()">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                    </div>
+                    <div id="studentsAttendance" class="attendance-list">
+                        <div class="no-data">لا يوجد حضور مسجل</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Student Dashboard -->
+        <section id="studentDashboard" class="dashboard premium-card" style="display: none;">
+            <div class="dashboard-header">
+                <h2><i class="fas fa-user-graduate"></i> لوحة الطالب</h2>
+                <div class="user-info">
+                    <span id="studentName">الطالب</span>
+                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                </div>
+            </div>
+
+            <div class="attendance-buttons large">
+                <button class="attendance-btn present" onclick="startAttendanceProcess('student', 'hadir')">
+                    <i class="fas fa-check-circle"></i>
+                    <span>تسجيل الحضور</span>
+                    <small>سأحضر اليوم</small>
+                </button>
+                <button class="attendance-btn permission" onclick="showReasonForm('student', 'izin')">
+                    <i class="fas fa-clock"></i>
+                    <span>طلب إذن</span>
+                    <small>لدي ظرف</small>
+                </button>
+                <button class="attendance-btn sick" onclick="showReasonForm('student', 'sakit')">
+                    <i class="fas fa-procedures"></i>
+                    <span>إبلاغ مرض</span>
+                    <small>لست بصحة جيدة</small>
+                </button>
+            </div>
+
+            <div class="student-info">
+                <h3><i class="fas fa-history"></i> سجل الحضور الأخير</h3>
+                <div id="studentAttendanceHistory" class="attendance-history">
+                    <div class="no-data">لا توجد سجلات حضور سابقة</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Reason Modal -->
+    <div id="reasonModal" class="modal" style="display: none;">
+        <div class="modal-content premium-card">
+            <h3 id="reasonModalTitle"><i class="fas fa-edit"></i> </h3>
+            <div class="input-group">
+                <label id="reasonLabel"></label>
+                <input type="text" id="reasonInput" class="premium-input" placeholder="">
+                <small id="reasonExample"></small>
+            </div>
+            <div class="modal-buttons">
+                <button class="premium-btn" onclick="submitAttendanceWithReason()">
+                    <i class="fas fa-check"></i> تأكيد
+                </button>
+                <button class="premium-btn secondary" onclick="closeReasonModal()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>جاري المعالجة...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
